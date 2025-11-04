@@ -16,19 +16,33 @@ class Testimonial extends Model
     public function scopeSearch($q, ?string $term) // $q = query builder, $term = search term
     {
         // fn = function, $qq = sub query builder
-        return $term ? $q->where(fn($qq) => $qq
-            ->where('user_name', 'like', "%{$term}%")
-            ->orWhere('company', 'like', "%{$term}%")
-            ->orWhere('content', 'like', "%{$term}%")
+        return $term ? $q->where(
+            fn($qq) => $qq
+                ->where('user_name', 'like', "%{$term}%")
+                ->orWhere('company', 'like', "%{$term}%")
+                ->orWhere('content', 'like', "%{$term}%")
         ) : $q;
     }
 
-    public function scopeStatus($q, $st)
+    // Status alias: published|unpublished|1|0|true|false
+    // Contoh: ?status=published atau ?status=0
+    public function scopeStatus($q, $status)
     {
-        if ($st === null || $st === '') {
+        if ($status === null || $status === '') {
             return $q;
         }
-        $val = in_array(strtolower((string) $st), ['1', 'true', 'yes', 'published'], true);
-        return $q->where('is_published', $val);
+
+        $map = [
+            'published' => true,
+            'unpublished' => false,
+            '1' => true,
+            '0' => false,
+            1 => true,
+            0 => false,
+            true => true,
+            false => false,
+        ];
+        $flag = $map[$status] ?? $status; // Jika langsung boolean
+        return $q->where('is_published', (bool)$flag);
     }
 }
