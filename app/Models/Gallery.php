@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Gallery extends Model
 {
-    use SoftDeletes;
+    use HasFactory;
 
-    protected $fillable = ['image_path','description','is_published'];
+    protected $fillable = ['category', 'title', 'image_path','description','is_published'];
     protected $casts = ['is_published' => 'boolean'];
 
-    // Cari pada deskripsi (opsional bisa tambah nama file)
+    // Cari pada judul, kategori, deskripsi
     public function scopeSearch($q, ?string $term) // $q = query builder, $term = search term
     {
-        return $term ? $q->where('description', 'like', "%{$term}%") : $q;
+        return $term ? $q->where(
+            fn($qq) => $qq
+                ->where('title', 'like', "%{$term}%")
+                ->orWhere('category', 'like', "%{$term}%")
+                ->orWhere('description', 'like', "%{$term}%")
+        ) : $q;
     }
 
     // Status alias: published|unpublished|1|0|true|false

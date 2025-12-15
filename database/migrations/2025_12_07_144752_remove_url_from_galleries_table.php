@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('galleries', function (Blueprint $table) {
-            $table->id();
-            $table->string('image_path');
-            $table->string('description', 500)->nullable();
-            $table->boolean('is_published')->default(true);
-            $table->timestamps();
+        Schema::table('galleries', function (Blueprint $table) {
+            $table->dropColumn('url');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('galleries');
+        Schema::table('galleries', function (Blueprint $table) {
+            $table->string('url')->nullable();
+        });
     }
 };

@@ -16,6 +16,8 @@ class GalleryResource extends JsonResource
     {
         return [
             'id'=>$this->id,
+            'category'=>$this->category,
+            'title'=>$this->title,
             'image_url'=>$this->image_path ? asset('storage/' . $this->image_path) : null,
             'description'=>$this->description,
             'is_published'=>$this->is_published,

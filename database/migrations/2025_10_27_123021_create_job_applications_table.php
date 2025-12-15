@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('resume_path')->nullable();
             $table->enum('status', ['not_processed', 'in_progress', 'accepted', 'rejected'])->default('not_processed');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
