@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\ForceJsonResponse;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,8 +17,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class);
+        $middleware->alias([
+            'admin' => AdminOnly::class,
+        ]);
+
+        // API should never redirect unauthenticated users to a web login route.
+        $middleware->redirectGuestsTo(fn () => null);
+        $middleware->appendToGroup('api', ForceJsonResponse::class);
+        $middleware->append(EnsureFrontendRequestsAreStateful::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (AuthenticationException $exception, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Akses ditolak karena Anda belum terautentikasi.',
+                ], 401);
+            }
+        });
     })->create();

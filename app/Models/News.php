@@ -4,11 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class News extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $fillable = ['news_category_id', 'title', 'slug', 'thumbnail_path', 'content', 'views', 'status', 'published_at'];
     protected $casts = ['published_at' => 'datetime'];
 

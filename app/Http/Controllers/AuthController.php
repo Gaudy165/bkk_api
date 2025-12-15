@@ -6,6 +6,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,44 +17,30 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        try {
-            $data = $request->validated();
+        $data = $request->validated();
 
-            // Handle upload photo jika ada
-            if ($request->hasFile('photo')) {
-                $path = $request->file('photo')->store('photos', 'public');
-                $data['photo'] = $path;
-            }
-
-            // FORCE role = user (admin tidak bisa register)
-            $data['role'] = 'user';
-
-            $user = User::create($data);
-
-            // Buat token untuk auto-login setelah register
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Registrasi berhasil',
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'photo' => $user->photo ? Storage::url($user->photo) : null,
-                        'role' => $user->role,
-                    ],
-                    'token' => $token,
-                ],
-            ], 201);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Registrasi gagal: ' . $e->getMessage(),
-            ], 500);
+        // Upload photo
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('photos', 'public');
         }
+
+        // FORCE role
+        $data['role'] = 'user';
+
+        $user = User::create($data);
+
+        // Buat token untuk auto-login setelah register
+        $tokenName = $user->role . '_token';
+        $token = $user->createToken($tokenName)->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registrasi berhasil',
+            'data' => [
+                'user' => $this->userPayload($user),
+                'token' => $token,
+            ],
+        ], 201);
     }
 
     /**
@@ -61,90 +48,68 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        try {
-            $credentials = $request->only('email', 'password');
-
-            // Cek kredensial
-            if (!Auth::attempt($credentials)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Email atau password salah',
-                ], 401);
-            }
-
-            $user = Auth::user();
-
-            // Buat token
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Login berhasil',
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'photo' => $user->photo ? Storage::url($user->photo) : null,
-                        'role' => $user->role,
-                    ],
-                    'token' => $token,
-                ],
-            ], 200);
-
-        } catch (\Throwable $e) {
+        // Cek kredensial
+        if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Login gagal: ' . $e->getMessage(),
-            ], 500);
+                'message' => 'Email atau password salah',
+            ], 401);
         }
+
+        $user = $request->user();
+
+        $device = $request->input('device_name', 'unknown-device');
+        $tokenName = "{$user->role}:{$device}";
+        $token = $user->createToken($tokenName)->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login berhasil',
+            'data' => [
+                'user' => $this->userPayload($user),
+                'token' => $token,
+            ],
+        ]);
     }
 
     /**
      * Logout (hapus token)
      */
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        try {
-            Auth::user()->currentAccessToken()->delete();
+        $request->user()?->currentAccessToken()?->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Logout berhasil',
-            ], 200);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Logout gagal: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout berhasil',
+        ]);
     }
 
     /**
      * Get data user yang sedang login
      */
-    public function me(): JsonResponse
+    public function me(Request $request): JsonResponse
     {
-        try {
-            $user = Auth::user();
+        $user = $request->user();
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'photo' => $user->photo ? Storage::url($user->photo) : null,
-                    'role' => $user->role,
-                ],
-            ], 200);
+        return response()->json([
+            'success' => true,
+            'data' => $this->userPayload($user),
+        ]);
+    }
 
-        } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data user: ' . $e->getMessage(),
-            ], 500);
+    private function userPayload(?User $user): ?array
+    {
+        if (!$user) {
+            return null;
         }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'photo' => $user->photo ? Storage::url($user->photo) : null,
+            'role' => $user->role,
+        ];
     }
 }

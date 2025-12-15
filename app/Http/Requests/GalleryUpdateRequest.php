@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class GalleryUpdateRequest extends FormRequest
+class GalleryUpdateRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,6 +20,8 @@ class GalleryUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'category' => 'sometimes|nullable|string|max:150',
+            'title' => 'sometimes|required|string|max:255',
             'image' => 'sometimes|nullable|image|max:2048',
             'description' => 'sometimes|nullable|string|max:500',
             'is_published' => 'sometimes|boolean',
