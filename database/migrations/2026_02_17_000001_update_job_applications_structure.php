@@ -13,9 +13,8 @@ return new class extends Migration
             $table->string('image_path')->nullable()->after('company');
             $table->date('date_posted')->nullable()->after('image_path');
             $table->unsignedBigInteger('views')->default(0)->after('date_posted');
-            $table->date('date')->nullable()->after('views');
-            $table->string('location')->nullable()->after('date');
-            $table->string('position')->nullable()->change();
+            $table->string('location')->nullable()->after('views');
+            $table->string('position')->nullable()->after('location');
             $table->string('salary')->nullable()->after('position');
             $table->date('start_date')->nullable()->after('salary');
             $table->date('end_date')->nullable()->after('start_date');
@@ -26,18 +25,6 @@ return new class extends Migration
             $table->json('benefits')->nullable()->after('working_hours');
             $table->unsignedInteger('quota')->nullable()->after('benefits');
             $table->json('majors')->nullable()->after('quota');
-        });
-
-        Schema::table('job_applications', function (Blueprint $table) {
-            $table->dropColumn([
-                'name',
-                'graduation_year',
-                'graduation_date',
-                'email',
-                'phone',
-                'resume_path',
-                'status',
-            ]);
         });
     }
 

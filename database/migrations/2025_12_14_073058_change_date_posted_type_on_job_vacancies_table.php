@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('job_vacancies', function (Blueprint $table) {
-            $table->timestamp('date_posted')->nullable()->change();
+            if (!Schema::hasColumn('job_vacancies', 'date_posted')) {
+                $table->timestamp('date_posted')->nullable();
+            }
         });
     }
 
