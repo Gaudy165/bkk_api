@@ -12,9 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('job_applications', function (Blueprint $table) {
-            $table->dropColumn('deleted_at');
+            if (Schema::hasColumn('job_applications', 'deleted_at')) {
+                $table->dropColumn('deleted_at');
+            }
         });
     }
+
 
     /**
      * Reverse the migrations.
