@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\JobVacancyController;
 use App\Http\Controllers\Api\PartnerCompanyController;
 use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\ContactMessageController;
+use App\Http\Controllers\Api\MajorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,8 @@ Route::prefix('public')->group(function () {
     Route::get('partner-companies', [PartnerCompanyController::class, 'publicIndex']);
 
     Route::get('testimonials', [TestimonialController::class, 'publicIndex']);
+
+    Route::get('majors', [MajorController::class, 'publicIndex']);
 });
 
 
