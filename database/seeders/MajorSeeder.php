@@ -11,19 +11,26 @@ class MajorSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
-    {
-        DB::table('majors')->insert([
-            ['name' => 'Rekayasa Perangkat Lunak', 'code' => 'RPL'],
-            ['name' => 'Desain Komunikasi Visual', 'code' => 'DKV'],
-            ['name' => 'Teknik Komputer dan Jaringan', 'code' => 'TKJ'],
-            ['name' => 'Mekatronika', 'code' => 'MKT'],
-            ['name' => 'Teknik Body Otomotif', 'code' => 'TPBO'],
-            ['name' => 'Teknik Pengelasan', 'code' => 'TL'],
-            ['name' => 'Teknik Body Kendaraan Ringan', 'code' => 'TBKR'],
-            ['name' => 'Teknik Pemesinan', 'code' => 'TPM'],
-            ['name' => 'Agribisnis Tanaman Pangan dan Hortikultura', 'code' => 'ATPH'],
-            ['name' => 'Agribisnis Pengolahan Hasil Pertanian', 'code' => 'APHP'],
-        ]);
+    public function run()
+{
+    $majors = [
+        ['code' => 'RPL', 'name' => 'Rekayasa Perangkat Lunak'],
+        ['code' => 'DKV', 'name' => 'Desain Komunikasi Visual'],
+        ['code' => 'TKJ', 'name' => 'Teknik Komputer dan Jaringan'],
+        ['code' => 'MKT', 'name' => 'Mekatronika'],
+        ['code' => 'TPBO', 'name' => 'Teknik Body Otomotif'],
+        ['code' => 'TL', 'name' => 'Teknik Pengelasan'],
+        ['code' => 'TBKR', 'name' => 'Teknik Body Kendaraan Ringan'],
+        ['code' => 'TPM', 'name' => 'Teknik Pemesinan'],
+        ['code' => 'ATPH', 'name' => 'Agribisnis Tanaman Pangan dan Hortikultura'],
+        ['code' => 'APHP', 'name' => 'Agribisnis Pengolahan Hasil Pertanian'],
+    ];
+
+    foreach ($majors as $major) {
+        Major::updateOrCreate(
+            ['code' => $major['code']], // cari berdasarkan code
+            ['name' => $major['name']]  // update name nya
+        );
     }
+}
 }
