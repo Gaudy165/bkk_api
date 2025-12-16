@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\JobVacancyStoreRequest;
 use App\Http\Requests\JobVacancyUpdateRequest;
 use App\Http\Resources\JobVacancyResource;
+use App\Http\Resources\PublicJobVacancyResource;
 use App\Models\JobVacancy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class JobVacancyController extends ApiController
 {
+    // ==================== Admin Methods ====================
     public function index(Request $request): JsonResponse
     {
         $jobQuery = JobVacancy::query()
@@ -80,5 +82,41 @@ class JobVacancyController extends ApiController
     {
         $jobVacancy->delete();
         return $this->ok(null, 'Lowongan berhasil dihapus');
+    }
+
+    // ==================== Public Methods ====================
+    public function publicIndex(Request $request): JsonResponse
+    {
+        $query = JobVacancy::query()
+            ->where('status', 'published')
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->orderByDesc('date_posted')
+            ->orderByDesc('id');
+
+        $items = $query->paginate($request->integer('per_page', 10))
+            ->appends($request->query());
+
+        return $this->ok(
+            PublicJobVacancyResource::collection($items),
+            'OK',
+            [
+                'pagination' => [
+                    'total' => $items->total(),
+                    'per_page' => $items->perPage(),
+                    'current_page' => $items->currentPage(),
+                    'total_page' => $items->lastPage(),
+                ]
+            ]
+        );
+    }
+
+    public function publicShow(JobVacancy $jobVacancy): JsonResponse
+    {
+        abort_unless($jobVacancy->status === 'published', 404);
+
+        $jobVacancy->increment('views');
+
+        return $this->ok(new PublicJobVacancyResource($jobVacancy->fresh()), 'OK');
     }
 }
