@@ -48,15 +48,18 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
+        $credentials = $request->only('email', 'password');
+
         // Cek kredensial
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (!Auth::attempt($credentials)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email atau password salah',
             ], 401);
         }
 
-        $user = $request->user();
+        // Ambil user setelah berhasil login
+        $user = User::where('email', $request->email)->first();
 
         $device = $request->input('device_name', 'unknown-device');
         $tokenName = "{$user->role}:{$device}";
